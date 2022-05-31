@@ -12,7 +12,6 @@ module.exports = {
         selectText: 'Languages',
         editLinkText: 'Edit this page on GitHub',
         lastUpdated: 'Last Updated',
-        nav: require('./nav/en'),
         sidebar: {
           '/guide/': guideSidebar,
         },
@@ -28,10 +27,6 @@ const guideSidebar = [
     children: [
       '',
       'getting-started',
-      'common-terms',
-      'initializing-dapps',
-      'accessing-accounts',
-      'sending-transactions',
     ],
   },
   {
