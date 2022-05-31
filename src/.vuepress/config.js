@@ -1,4 +1,4 @@
-module.exports = {
+module.exports = (_ctx) => ({
   dest: 'docs/dist',
   
   themeConfig: {
@@ -18,7 +18,7 @@ module.exports = {
       },
     },
   },  
-};
+});
 
 const guideSidebar = [
   {
