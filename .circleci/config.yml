@@ -1,0 +1,77 @@
+version: 2.1
+
+workflows:
+  test-and-deploy:
+    jobs:
+      - prep-deps
+      - build:
+          requires:
+            - prep-deps
+      - deploy:
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - prep-deps
+            - build
+
+jobs:
+  prep-deps:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - checkout
+      - run:
+          name: Install deps
+          command: |
+            yarn --frozen-lockfile --ignore-scripts
+      - persist_to_workspace:
+          root: .
+          paths:
+            - node_modules
+
+  build:
+    docker:
+      - image: circleci/node:12
+    environment:
+      - TARGET_BRANCH: gh-pages
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Build
+          command: |
+            yarn build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - docs/dist/        
+
+  deploy:
+    docker:
+      - image: circleci/node:12
+    environment:
+      - TARGET_BRANCH: gh-pages
+      - GH_EMAIL: ci@githu.com
+      - GH_NAME: ci-builder
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "a0:84:db:5f:4e:7c:b8:23:50:48:41:5a:5b:4c:14:09"    
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Deploy site
+          command: |
+            git config --global user.email $GH_EMAIL
+            git config --global user.name $GH_NAME
+            git checkout $TARGET_BRANCH
+            rm -rf `ls -a | grep "[^.|..|.git|.nojekyll|docs|LICENSE|CNAME|index.html]"`
+            cp -r docs/dist/* .
+            rm -rf docs
+            git add -A
+            git commit -m "Automated deployment: ${CIRCLE_SHA1} [ci skip]" --allow-empty
+            git push -f origin $TARGET_BRANCH
